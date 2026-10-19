@@ -23,6 +23,11 @@ test('authenticated app starts at owner sign-in and calls only the public health
   const unconfiguredResearch=vm.runInContext(`state.providers.research=false;state.tasks[0].status='queued';workflows()`,context);
   assert.match(unconfiguredResearch,/disabled onclick="runAgentTask/);
   assert.match(unconfiguredResearch,/Research setup required/);
+  const blockedByDependency=vm.runInContext(`state.providers.research=true;state.tasks=[{id:'task-2',workflowId:'workflow-1',status:'queued',needsLiveResearch:false,title:'Competitor analysis',description:'Compare competitors',agentId:'agent-3',dependsOn:['task-1'],outputs:[]},{id:'task-1',workflowId:'workflow-1',status:'queued',needsLiveResearch:false,title:'Trend research',description:'Find trends',agentId:'agent-2',dependsOn:[],outputs:[]}];workflows()`,context);
+  assert.match(blockedByDependency,/disabled onclick="runAgentTask\('task-2'\)">Waiting on step 1 approval/);
+  assert.match(blockedByDependency,/<button class="button small primary" +onclick="runAgentTask\('task-1'\)">Run agent task/);
+  const unblocked=vm.runInContext(`state.tasks[1].status='complete';workflows()`,context);
+  assert.match(unblocked,/<button class="button small primary" +onclick="runAgentTask\('task-2'\)">Run agent task/);
   assert.deepEqual([...calls],['/api/health','/api/health']);
 });
 
