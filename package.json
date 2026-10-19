@@ -8,7 +8,7 @@
     "dev": "vercel dev",
     "db:migrate": "node scripts/migrate.mjs",
     "test": "node --test",
-    "check": "node --check public/app.js && node --check public/backend-ui.js && node --check api/[...route].mjs && node --check api/handler.mjs && node --check api/lib/core.mjs && node --check api/lib/database.mjs && node --check scripts/migrate.mjs"
+    "check": "node --check public/app.js && node --check public/backend-ui.js && node --check api/[...route].mjs && node --check api/auth/login.mjs && node --check api/tasks/[taskId]/run.mjs && node --check api/tasks/[taskId]/review.mjs && node --check api/lib/vercel-adapter.mjs && node --check api/handler.mjs && node --check api/lib/core.mjs && node --check api/lib/database.mjs && node --check scripts/migrate.mjs"
   },
   "dependencies": {
     "pg": "8.23.1"

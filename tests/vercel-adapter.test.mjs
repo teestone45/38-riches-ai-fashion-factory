@@ -1,9 +1,10 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { Readable } from "node:stream";
-import vercelApi from "../api/[...route].mjs";
+import vercelApi from "../api/lib/vercel-adapter.mjs";
+import loginApi from "../api/auth/login.mjs";
 
-async function invoke({ method = "GET", url = "/api/state", headers = {}, body } = {}) {
+async function invoke(api = vercelApi, { method = "GET", url = "/api/state", headers = {}, body } = {}) {
   const request = Readable.from([]);
   Object.assign(request, {
     method,
@@ -20,7 +21,7 @@ async function invoke({ method = "GET", url = "/api/state", headers = {}, body }
       this.body = value?.toString() || "";
     }
   };
-  await vercelApi(request, response);
+  await api(request, response);
   return { status: response.statusCode, headers: resultHeaders, body: JSON.parse(response.body) };
 }
 
@@ -32,7 +33,7 @@ test("Vercel adapter returns the shared API's unauthorized response", async () =
 });
 
 test("Vercel adapter rejects oversized request bodies", async () => {
-  const response = await invoke({
+  const response = await invoke(vercelApi, {
     method: "POST",
     url: "/api/auth/login",
     headers: { "content-length": "128001" },
@@ -40,4 +41,26 @@ test("Vercel adapter rejects oversized request bodies", async () => {
   });
   assert.equal(response.status, 413);
   assert.equal(response.body.code, "payload_too_large");
+});
+
+test("explicit nested login route reaches the shared authentication handler", async () => {
+  const previousPassword = process.env.FACTORY_OWNER_PASSWORD;
+  const previousSecret = process.env.FACTORY_SESSION_SECRET;
+  process.env.FACTORY_OWNER_PASSWORD = "test-owner-password-123";
+  process.env.FACTORY_SESSION_SECRET = "test-session-secret-with-more-than-32-characters";
+  try {
+    const response = await invoke(loginApi, {
+      method: "POST",
+      url: "/api/auth/login",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ password: "incorrect" })
+    });
+    assert.equal(response.status, 401);
+    assert.equal(response.body.error, "Incorrect owner password.");
+  } finally {
+    if (previousPassword === undefined) delete process.env.FACTORY_OWNER_PASSWORD;
+    else process.env.FACTORY_OWNER_PASSWORD = previousPassword;
+    if (previousSecret === undefined) delete process.env.FACTORY_SESSION_SECRET;
+    else process.env.FACTORY_SESSION_SECRET = previousSecret;
+  }
 });

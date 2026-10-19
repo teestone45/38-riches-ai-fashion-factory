@@ -4,6 +4,12 @@
   "functions": {
     "api/[...route].mjs": {
       "maxDuration": 60
+    },
+    "api/tasks/[taskId]/run.mjs": {
+      "maxDuration": 60
+    },
+    "api/tasks/[taskId]/review.mjs": {
+      "maxDuration": 60
     }
   },
   "headers": [
