@@ -27,7 +27,8 @@ create table if not exists factory_agents (
 );
 create table if not exists workflow_runs (
   id uuid primary key default gen_random_uuid(), company_id uuid not null references factory_company(id) on delete cascade,
-  objective text not null, title text not null, planner text not null check(planner in ('rule_planner','openai_responses')),
+  objective text not null, title text not null, plan_summary text not null default '',
+  planner text not null check(planner in ('rule_planner','openai_responses')),
   status text not null default 'active' check(status in ('active','awaiting_approval','complete','failed','paused')),
   created_at timestamptz not null default now()
 );
