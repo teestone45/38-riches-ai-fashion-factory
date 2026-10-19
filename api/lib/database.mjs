@@ -1,8 +1,9 @@
 import pg from "pg";
 
 const { Pool } = pg;
+export const getDatabaseConnectionString = (environment = process.env) => environment.DATABASE_URL || environment.STORAGE_URL;
 const pool = new Pool({
-  connectionString: process.env.DATABASE_URL,
+  connectionString: getDatabaseConnectionString(),
   max: 5,
   idleTimeoutMillis: 10_000,
   connectionTimeoutMillis: 10_000,
@@ -10,8 +11,8 @@ const pool = new Pool({
 });
 
 function query(strings, ...values) {
-  if (!process.env.DATABASE_URL) {
-    throw Object.assign(new Error("Set DATABASE_URL to your PostgreSQL connection string."), {
+  if (!getDatabaseConnectionString()) {
+    throw Object.assign(new Error("Set DATABASE_URL or STORAGE_URL to your PostgreSQL connection string."), {
       status: 503,
       code: "database_not_configured"
     });

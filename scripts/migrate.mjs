@@ -10,10 +10,10 @@ for (const envFile of [".env.production.local", ".env"]) {
     if (error.code !== "ENOENT") throw error;
   }
 }
-const databaseUrl = process.env.DATABASE_URL;
+const databaseUrl = process.env.DATABASE_URL || process.env.STORAGE_URL;
 
 if (!databaseUrl) {
-  throw new Error("Set DATABASE_URL before running database migrations.");
+  throw new Error("Set DATABASE_URL or STORAGE_URL before running database migrations.");
 }
 
 const pool = new Pool({ connectionString: databaseUrl, max: 1, connectionTimeoutMillis: 10_000 });

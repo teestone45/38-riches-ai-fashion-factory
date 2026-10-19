@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { db } from "../api/lib/database.mjs";
+import { db, getDatabaseConnectionString } from "../api/lib/database.mjs";
 
 test("PostgreSQL tagged queries pass interpolated values as parameters", async () => {
   const previousUrl = process.env.DATABASE_URL;
@@ -24,4 +24,18 @@ test("PostgreSQL tagged queries pass interpolated values as parameters", async (
     if (previousUrl === undefined) delete process.env.DATABASE_URL;
     else process.env.DATABASE_URL = previousUrl;
   }
+});
+
+test("database connection accepts the Neon Vercel STORAGE_URL variable", () => {
+  assert.equal(
+    getDatabaseConnectionString({ STORAGE_URL: "postgresql://example.invalid/factory" }),
+    "postgresql://example.invalid/factory"
+  );
+  assert.equal(
+    getDatabaseConnectionString({
+      DATABASE_URL: "postgresql://primary.invalid/factory",
+      STORAGE_URL: "postgresql://fallback.invalid/factory"
+    }),
+    "postgresql://primary.invalid/factory"
+  );
 });
